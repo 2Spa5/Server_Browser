@@ -96,7 +96,7 @@ public class App {
                 out.writeBytes("Content-Type: text/css; charset=utf-8\n");
             if (ext.equals("js") )
                 out.writeBytes("Content-Type: application/js; charset=utf-8\n");
-             out.writeBytes("\n");
+            out.writeBytes("\n");
             InputStream in = new FileInputStream(file);
             byte b[] = new byte[8192];
             int n;
@@ -112,6 +112,7 @@ public class App {
             out.writeBytes("Content-Lenght " + file.length() + "\n");
             out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
             out.writeBytes("Date: " + new Date() + "\n");
+            out.writeBytes("\n");
         }
     }
 
