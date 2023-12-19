@@ -33,6 +33,12 @@ public class App {
                 path = path.substring(1);
                 System.out.println("---- " + path + " ----");
 
+                if (path.equals(""))
+                    path = "index.html";
+
+                if (path.endsWith("/"))
+                    path += "index.html";
+
                 do {
                     String line = in.readLine();
                     System.out.println(line);
@@ -52,18 +58,20 @@ public class App {
         }
     }
 
-    /* private static String findFile (String path) {
-        try {
-            String p[] = path.split("/");
-            String s = p[1];
-            return s;
-        } catch (Exception e) {
-            System.out.println("ERROR findFile - 1: " + e.getMessage() + "\n");
-        }
-        return "ERROR findFile - 2 \n";
-    } */
+    /*
+     * private static String findFile (String path) {
+     * try {
+     * String p[] = path.split("/");
+     * String s = p[1];
+     * return s;
+     * } catch (Exception e) {
+     * System.out.println("ERROR findFile - 1: " + e.getMessage() + "\n");
+     * }
+     * return "ERROR findFile - 2 \n";
+     * }
+     */
 
-    private static String findExt (String path) {
+    private static String findExt(String path) {
         try {
             String a[] = path.split("\\.");
             path = a[1];
@@ -75,56 +83,88 @@ public class App {
     }
 
     private static void sendBinaryFile(Socket socket, String name, String ext) throws IOException {
-        
+
         String filename = "htdocs/" + name;
         File file = new File(filename);
+
+        if (file.exists() && (filename.contains("\\."))) {
+
+            try {
+
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+                out.writeBytes("HTTP/1.1 200 OK\n");
+                out.writeBytes("Content-Lenght " + file.length() + "\n");
+                out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
+                out.writeBytes("Date: " + new Date() + "\n");
+                checkExt(socket, ext, out);
+
+                InputStream in = new FileInputStream(file);
+                byte b[] = new byte[8192];
+                int n;
+                while ((n = in.read(b)) != -1) {
+                    out.write(b, 0, n);
+                }
+                in.close();
+
+            } catch (Exception e) {
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                System.out.println(e.getMessage());
+                write404(socket, file, out);
+            }
+
+        } else {
+
+            redicted(socket, filename);
+
+        }
+
+    }
+
+    private static void redicted(Socket socket, String filename) throws IOException {
         try {
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            out.writeBytes("HTTP/1.1 200 OK\n");
-            out.writeBytes("Content-Lenght " + file.length() + "\n");
-            out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
-            out.writeBytes("Date: " + new Date() + "\n");
-
-
-            if (ext.equals("jpg") || ext.equals("jpeg") || ext.equals("png") )
-                out.writeBytes("Content-Type: image/" + ext + "; charset=utf-8\n");
-            if (ext.equals("html") )
-                out.writeBytes("Content-Type: text/html; charset=utf-8\n");
-            if (ext.equals("css") )
-                out.writeBytes("Content-Type: text/css; charset=utf-8\n");
-            if (ext.equals("js") )
-                out.writeBytes("Content-Type: application/js; charset=utf-8\n");
+            out.writeBytes("HTTP/1.1 301 Moved Permanently\n");
+            out.writeBytes("Location: " + filename + "/\n");
             out.writeBytes("\n");
-            InputStream in = new FileInputStream(file);
-            byte b[] = new byte[8192];
-            int n;
-            while ((n = in.read(b)) != -1) {
-                out.write(b, 0, n);
-            }
-            in.close();
+            System.out.println(filename + "-------------------------------------");
 
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            out.writeBytes("HTTP/1.1 404 Not Found");
-            out.writeBytes("Content-Lenght " + file.length() + "\n");
-            out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
-            out.writeBytes("Date: " + new Date() + "\n");
-            out.writeBytes("\n");
+            System.out.println("ERROR: redicted");
         }
     }
 
-    /* private void redicted(Socket socket) throws IOException{
+    private static void write404(Socket socket, File file, DataOutputStream out) {
+
         try {
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-            out.writeBytes("HTTP/1.1 301 Move Permantly");;
-
+            out.writeBytes("HTTP/1.1 404 Not Found\n");
+            out.writeBytes("Content-Lenght " + file.length() + "\n");
+            out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
+            out.writeBytes("Date: " + new Date() + "\n");
+            out.writeBytes("\n");
         } catch (Exception e) {
-            
+            System.out.println("ERROR: write404");
         }
-    } */
+
+    }
+
+    private static void checkExt(Socket socket, String ext, DataOutputStream out) {
+
+        try {
+            if (ext.equals("jpg") || ext.equals("jpeg") || ext.equals("png"))
+                out.writeBytes("Content-Type: image/" + ext + "; charset=utf-8\n");
+            if (ext.equals("html"))
+                out.writeBytes("Content-Type: text/html; charset=utf-8\n");
+            if (ext.equals("css"))
+                out.writeBytes("Content-Type: text/css; charset=utf-8\n");
+            if (ext.equals("js"))
+                out.writeBytes("Content-Type: application/js; charset=utf-8\n");
+            out.writeBytes("\n");
+        } catch (Exception e) {
+            System.out.println("ERROR: checkExt");
+        }
+
+    }
 }
