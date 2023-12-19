@@ -31,9 +31,7 @@ public class App {
                 String riga[] = richiesta.split(" ");
                 String path = riga[1];
                 path = path.substring(1);
-                System.out.println("----" + path + "----");
-
-                String name = findFile(path);
+                System.out.println("---- " + path + " ----");
 
                 do {
                     String line = in.readLine();
@@ -42,7 +40,7 @@ public class App {
                         break;
                 } while (true);
 
-                sendBinaryFile(s, name, findExt(name));
+                sendBinaryFile(s, path, findExt(path));
 
                 out.flush();
                 s.close();
@@ -54,16 +52,16 @@ public class App {
         }
     }
 
-    private static String findFile (String path) {
+    /* private static String findFile (String path) {
         try {
             String p[] = path.split("/");
             String s = p[1];
             return s;
         } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
+            System.out.println("ERROR findFile - 1: " + e.getMessage() + "\n");
         }
-        return "ERROR";
-    }
+        return "ERROR findFile - 2 \n";
+    } */
 
     private static String findExt (String path) {
         try {
@@ -71,15 +69,16 @@ public class App {
             path = a[1];
             return path;
         } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
+            System.out.println("ERROR findExt - 1: " + e.getMessage() + "\n");
         }
-        return "ERROR";
+        return "ERROR findExt - 2 \n";
     }
 
     private static void sendBinaryFile(Socket socket, String name, String ext) throws IOException {
+        
+        String filename = "htdocs/" + name;
+        File file = new File(filename);
         try {
-            String filename = "htdocs/" + name;
-            File file = new File(filename);
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -88,15 +87,16 @@ public class App {
             out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
             out.writeBytes("Date: " + new Date() + "\n");
 
-            if (ext == "jpg" || ext == "jpeg" || ext == "png")
+
+            if (ext.equals("jpg") || ext.equals("jpeg") || ext.equals("png") )
                 out.writeBytes("Content-Type: image/" + ext + "; charset=utf-8\n");
-            if (ext == "html")
+            if (ext.equals("html") )
                 out.writeBytes("Content-Type: text/html; charset=utf-8\n");
-            if (ext == "css")
+            if (ext.equals("css") )
                 out.writeBytes("Content-Type: text/css; charset=utf-8\n");
-            if (ext == "js")
+            if (ext.equals("js") )
                 out.writeBytes("Content-Type: application/js; charset=utf-8\n");
-            
+             out.writeBytes("\n");
             InputStream in = new FileInputStream(file);
             byte b[] = new byte[8192];
             int n;
@@ -106,9 +106,24 @@ public class App {
             in.close();
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             out.writeBytes("HTTP/1.1 404 Not Found");
+            out.writeBytes("Content-Lenght " + file.length() + "\n");
+            out.writeBytes("Server: Java HTTP Server from Spagni: 1.0\n");
+            out.writeBytes("Date: " + new Date() + "\n");
         }
     }
 
+    /* private void redicted(Socket socket) throws IOException{
+        try {
+
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            out.writeBytes("HTTP/1.1 301 Move Permantly");;
+
+        } catch (Exception e) {
+            
+        }
+    } */
 }
